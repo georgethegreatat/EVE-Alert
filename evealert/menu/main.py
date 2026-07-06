@@ -1,11 +1,12 @@
 import os
+import platform
 from datetime import datetime
 from threading import Thread
 
 import customtkinter
 import pyautogui
 from CTkMessagebox import CTkMessagebox as messagebox
-from PIL import Image
+from PIL import Image, ImageTk
 from pynput import keyboard
 from screeninfo import get_monitors
 
@@ -299,12 +300,17 @@ class MainMenu(customtkinter.CTk):
         """
         try:
             icon_path = get_resource_path(icon)
-            if icon_path and os.path.exists(icon_path):
-                self.iconbitmap(icon_path)
-            else:
+            if not icon_path or not os.path.exists(icon_path):
                 log_main.warning("Icon file not found: %s", icon_path)
+                return
 
-            self.iconbitmap(default=icon_path)
+            if platform.system() == "Darwin":
+                png_icon_path = get_resource_path("img/online.png")
+                self._window_icon = ImageTk.PhotoImage(Image.open(png_icon_path))
+                self.iconphoto(True, self._window_icon)
+                return
+
+            self.iconbitmap(icon_path)
         except Exception as e:
             log_main.exception("Error setting icon: %s", e)
 
@@ -332,8 +338,12 @@ class MainMenu(customtkinter.CTk):
     # Mouse Functions
     def update_mouse_position_label(self) -> None:
         """Update the mouse position label with current coordinates."""
-        x, y = pyautogui.position()
-        self.mouse_position_label.configure(text=f"Mausposition: X={x}, Y={y}")
+        try:
+            x, y = pyautogui.position()
+            self.mouse_position_label.configure(text=f"Mausposition: X={x}, Y={y}")
+        except Exception as e:
+            log_main.warning("Unable to read mouse position: %s", e)
+            self.mouse_position_label.configure(text="Mausposition: unavailable")
         self.after(UI_UPDATE_INTERVAL, self.update_mouse_position_label)
 
     def start_overlay(self) -> None:
@@ -348,7 +358,12 @@ class MainMenu(customtkinter.CTk):
         Returns:
             Monitor object or None if not found
         """
-        mouse_x, mouse_y = pyautogui.position()
+        try:
+            mouse_x, mouse_y = pyautogui.position()
+        except Exception as e:
+            log_main.warning("Unable to read mouse position: %s", e)
+            return None
+
         for monitor in get_monitors():
             if (
                 monitor.x <= mouse_x <= monitor.x + monitor.width
@@ -455,7 +470,9 @@ class MainMenu(customtkinter.CTk):
         the GUI. Handles errors gracefully with user feedback.
         """
         try:
-            if not self.alert.is_running:
+            if self.alert.is_starting:
+                self.write_message("System: EVE Alert is starting.")
+            elif not self.alert.is_running:
                 Thread(target=self.alert.start).start()
             else:
                 self.write_message("System: EVE Alert is already running.")

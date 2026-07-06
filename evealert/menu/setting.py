@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import customtkinter
 from dhooks_lite import Webhook
 
-from evealert.settings.helper import get_resource_path
+from evealert.settings.helper import get_settings_path
 from evealert.settings.logger import logging
 
 if TYPE_CHECKING:
@@ -58,7 +58,7 @@ class SettingMenu:
         return self.open
 
     def load_settings(self):
-        config_path = get_resource_path("settings.json")
+        config_path = get_settings_path()
         try:
             with open(config_path, encoding="utf-8") as config_file:
                 settings = json.load(config_file)
@@ -177,7 +177,7 @@ class SettingMenu:
         if settings is None:
             settings = self.default
 
-        config_path = get_resource_path("settings.json")
+        config_path = get_settings_path()
         with open(config_path, encoding="utf-8", mode="w") as config_file:
             json.dump(settings, config_file, indent=4)
 

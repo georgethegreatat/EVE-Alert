@@ -1,3 +1,4 @@
+import platform
 from typing import TYPE_CHECKING, Optional
 
 import customtkinter
@@ -39,6 +40,20 @@ class OverlaySystem:
         self.overlay = None
         self.canvas = None
 
+    @staticmethod
+    def _overlay_offset() -> tuple[int, int]:
+        """Return platform-specific overlay window position adjustment."""
+        if platform.system() == "Windows":
+            return -10, 0
+        return 0, 0
+
+    @staticmethod
+    def _selection_offset() -> tuple[int, int]:
+        """Return platform-specific selected region adjustment."""
+        if platform.system() == "Windows":
+            return 0, 30
+        return 0, 0
+
     def create_overlay(self, monitor) -> None:
         """Create a fullscreen overlay on the specified monitor.
 
@@ -51,8 +66,9 @@ class OverlaySystem:
         self.overlay.attributes("-topmost", True)
         self.overlay.configure(bg="black")
 
-        monitor_x = monitor.x - 10  # Subtract 10 pixels to solve weird bug?
-        monitor_y = monitor.y
+        offset_x, offset_y = self._overlay_offset()
+        monitor_x = monitor.x + offset_x
+        monitor_y = monitor.y + offset_y
 
         self.overlay.geometry(
             f"{monitor.width}x{monitor.height}+{(monitor_x)}+{monitor_y}"
@@ -153,15 +169,12 @@ class OverlaySystem:
         to settings. Marks configuration as changed.
         """
         settings = self.main.menu.setting.load_settings()
-        settings["alert_region_1"]["x"] = self.start_x
-        settings["alert_region_1"]["y"] = (
-            self.start_y + 30
-        )  # Add 30 pixels to the y-coordinate to solve weird bug?
+        offset_x, offset_y = self._selection_offset()
+        settings["alert_region_1"]["x"] = self.start_x + offset_x
+        settings["alert_region_1"]["y"] = self.start_y + offset_y
 
-        settings["alert_region_2"]["x"] = self.end_x
-        settings["alert_region_2"]["y"] = (
-            self.end_y + 30
-        )  # Add 30 pixels to the y-coordinate to solve weird bug?
+        settings["alert_region_2"]["x"] = self.end_x + offset_x
+        settings["alert_region_2"]["y"] = self.end_y + offset_y
 
         self.main.menu.setting.save_settings(settings)
         self.main.menu.config.changed = True
@@ -175,15 +188,12 @@ class OverlaySystem:
         to settings. Marks configuration as changed.
         """
         settings = self.main.menu.setting.load_settings()
-        settings["faction_region_1"]["x"] = self.start_x
-        settings["faction_region_1"]["y"] = (
-            self.start_y + 30
-        )  # Add 30 pixels to the y-coordinate to solve weird bug?
+        offset_x, offset_y = self._selection_offset()
+        settings["faction_region_1"]["x"] = self.start_x + offset_x
+        settings["faction_region_1"]["y"] = self.start_y + offset_y
 
-        settings["faction_region_2"]["x"] = self.end_x
-        settings["faction_region_2"]["y"] = (
-            self.end_y + 30
-        )  # Add 30 pixels to the y-coordinate to solve weird bug?
+        settings["faction_region_2"]["x"] = self.end_x + offset_x
+        settings["faction_region_2"]["y"] = self.end_y + offset_y
 
         self.main.menu.setting.save_settings(settings)
         self.main.menu.config.changed = True

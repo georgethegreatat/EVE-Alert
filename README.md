@@ -1,5 +1,135 @@
 # Eve Online Alert
 
+## FORK INFORMATION
+
+### This repo is forked specifically to provide solution, tested and worked on MacOS Tahoe 26.0.1 (test date: 6 July 2026). 
+
+## Running EVE Alert on macOS
+
+This guide explains how to run EVE Alert from source on macOS.
+
+## Requirements
+
+- macOS
+- Python 3.10, 3.11, or 3.12
+- Git
+
+Python 3.13+ is not currently declared as supported by this project.
+
+## Install
+
+Clone the repository:
+
+```sh
+git clone https://github.com/georgethegreatat/EVE-Alert.git
+cd EVE-Alert
+```
+
+Create and activate a virtual environment (yes, you need pre-install python12):
+
+```sh
+python3.12 -m venv .venv
+source .venv/bin/activate
+```
+
+Install the app:
+
+```sh
+python -m pip install -U pip
+python -m pip install -e .
+```
+
+Run EVE Alert:
+
+```sh
+eve-alert
+```
+
+You can also run it with:
+
+```sh
+python -m evealert
+```
+
+## macOS Permissions
+
+EVE Alert needs macOS privacy permissions for screen capture, mouse/keyboard input, and hotkeys.
+
+Open:
+
+```text
+System Settings > Privacy & Security
+```
+
+Enable permissions for your terminal app, for example Terminal, iTerm2, or Warp:
+
+- Screen Recording
+- Accessibility
+- Input Monitoring
+
+After changing permissions, restart the terminal and run EVE Alert again.
+
+## First Run
+
+1. Start the app with `eve-alert`.
+2. Open `Config Mode`.
+3. Use the configured hotkeys to select alert and faction regions.
+4. Save settings.
+5. Press `Start Script`.
+
+If the app says the settings are invalid, configure the alert and faction regions first.
+
+## Troubleshooting
+
+### `source: no such file or directory: .venv/bin/activate`
+
+The virtual environment was not created successfully. Re-run:
+
+```sh
+python3.12 -m venv .venv
+```
+
+Only run `source .venv/bin/activate` after the venv command succeeds.
+
+### `ensurepip` or `pyexpat` error when creating the venv
+
+This is usually a local Homebrew Python issue, not an EVE Alert issue.
+
+Try reinstalling Python:
+
+```sh
+brew reinstall python@3.12
+```
+
+Then recreate the virtual environment:
+
+```sh
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+```
+
+### Keyboard warning: process is not trusted
+
+If you see a warning like:
+
+```text
+This process is not trusted! Input event monitoring will not be possible
+```
+
+enable `Accessibility` and `Input Monitoring` permissions for your terminal app.
+
+## Settings and Logs
+
+On macOS, settings and logs are stored in:
+
+```text
+~/Library/Application Support/EVE Alert/
+```
+
+
+---
+
 ![Release](https://img.shields.io/github/v/release/Geuthur/EVE-Alert)
 ![Licence](https://img.shields.io/github/license/geuthur/EVE-Alert)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Geuthur/EVE-Alert-Opensource/main.svg)](https://results.pre-commit.ci/latest/github/Geuthur/EVE-Alert-Opensource/main)
@@ -42,6 +172,26 @@ Go to [the releases page](https://github.com/Geuthur/EVE-Alert-Opensource/releas
   The Application only works with 100% Scaling this means your Monitor Scaling need to be 100% this can be changed in the "Display Settings"
 - Issues with Sound
   Please check if you have a Sound Device installed.
+
+### macOS
+
+Use Python 3.10, 3.11, or 3.12. Python 3.13+ is not declared as supported by this project yet.
+
+```sh
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip
+python -m pip install -e .
+eve-alert
+```
+
+On first run, macOS may ask for privacy permissions. Enable permissions for the terminal app or packaged EVE Alert app in:
+
+- System Settings > Privacy & Security > Screen Recording
+- System Settings > Privacy & Security > Accessibility
+- System Settings > Privacy & Security > Input Monitoring
+
+Settings and logs are stored in `~/Library/Application Support/EVE Alert/`.
 
 ## Detection<a name="detection"></a>
 

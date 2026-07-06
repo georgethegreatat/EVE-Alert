@@ -14,10 +14,10 @@ from evealert.constants import (
     LOG_FORMAT_STRING,
     LOG_MAX_BYTES,
 )
-from evealert.settings.helper import get_resource_path
+from evealert.settings.helper import get_log_path, get_settings_path
 
 # Create logs directory
-LOG_PATH = Path("logs")
+LOG_PATH = get_log_path()
 LOG_PATH.mkdir(exist_ok=True)
 
 # Create formatter
@@ -84,7 +84,7 @@ def setup_logger(
     """
     # Try to load log level from settings
     if level is None:
-        config_path = get_resource_path("settings.json")
+        config_path = get_settings_path()
         try:
             with open(config_path, encoding="utf-8") as config_file:
                 settings = json.load(config_file)

@@ -41,6 +41,7 @@ dependencies = [
     "sounddevice==0.5.1",
     "soundfile==0.12.1",
 ]
+scripts.eve-alert = "evealert.app:run"
 urls.Changelog = "https://github.com/Geuthur/EVE-Alert-Opensource/blob/main/CHANGELOG.md"
 urls.Documentation = "https://github.com/Geuthur/EVE-Alert-Opensource/blob/main/README.md"
 urls.Donations = "https://ko-fi.com/Geuthur"

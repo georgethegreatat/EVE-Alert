@@ -77,7 +77,19 @@ class AlertAgent:
 
         # Main Settings
         self.running = False
+        self.starting = False
         self.check = False
+        self.settings_valid = False
+        self.x1 = 0
+        self.y1 = 0
+        self.x2 = 0
+        self.y2 = 0
+        self.x1_faction = 0
+        self.y1_faction = 0
+        self.x2_faction = 0
+        self.y2_faction = 0
+        self.detection = 90
+        self.detection_faction = 90
 
         # Main lock for alarm processing - prevents multiple simultaneous alarm checks
         self.lock = asyncio.Lock()
@@ -133,6 +145,10 @@ class AlertAgent:
         return self.running
 
     @property
+    def is_starting(self) -> bool:
+        return self.starting
+
+    @property
     def is_alarm(self) -> bool:
         return self.alarm_detected
 
@@ -157,25 +173,37 @@ class AlertAgent:
         self.main.write_message("System: EVE Alert stopped.", "green")
 
     def start(self) -> bool:
-        self.loop.run_until_complete(self.vision_check())
-        if self.check is True:
+        if self.running or self.starting:
+            return False
 
-            self.vison_t = self.loop.create_task(self.vision_thread())
-            self.vision_faction_t = self.loop.create_task(self.vision_faction_thread())
+        self.starting = True
+        try:
+            self.loop.run_until_complete(self.vision_check())
+            if self.check is True:
 
-            # Start the Alarm
-            self.alert_t = self.loop.create_task(self.run())
+                self.vison_t = self.loop.create_task(self.vision_thread())
+                self.vision_faction_t = self.loop.create_task(
+                    self.vision_faction_thread()
+                )
 
-            self.running = True
-            self.main.write_message("System: EVE Alert started.", "green")
-            self.loop.run_forever()
-            logger.debug("Alle Tasks wurden gestartet")
-            return True
-        return False
+                # Start the Alarm
+                self.alert_t = self.loop.create_task(self.run())
+
+                self.running = True
+                self.starting = False
+                self.main.write_message("System: EVE Alert started.", "green")
+                self.loop.run_forever()
+                logger.debug("Alle Tasks wurden gestartet")
+                return True
+            return False
+        finally:
+            if not self.running:
+                self.starting = False
 
     def stop(self) -> None:
         self.loop.stop()
         self.running = False
+        self.starting = False
         self.currently_playing_sounds = {}
         self.alarm_trigger_counts = {}
         self.cooldown_timers = {}
@@ -184,21 +212,23 @@ class AlertAgent:
         self.main.update_alert_button()
         self.main.update_faction_button()
 
-    def load_settings(self) -> None:
+    def load_settings(self) -> bool:
         settings = self.main.menu.setting.load_settings()
 
         if settings:
             # Validate settings
             is_valid, errors = ConfigValidator.validate_settings_dict(settings)
             if not is_valid:
+                self.settings_valid = False
                 error_msg = "Configuration validation failed:\n" + "\n".join(errors)
                 logger.error(error_msg)
                 self.main.write_message(
-                    "Settings validation failed. Check logs.", "red"
+                    "Settings validation failed. Configure alert/faction regions first.",
+                    "red",
                 )
                 for error in errors:
                     self.main.write_message(f"  - {error}", "red")
-                return
+                return False
             self.x1 = int(settings["alert_region_1"]["x"])
             self.y1 = int(settings["alert_region_1"]["y"])
             self.x2 = int(settings["alert_region_2"]["x"])
@@ -229,6 +259,10 @@ class AlertAgent:
                 if factiom_vision_opened:
                     self.set_vision_faction()
                 self.main.write_message("Settings: Loaded.", "green")
+            self.settings_valid = True
+            return True
+        self.settings_valid = False
+        return False
 
     def set_vision(self) -> None:
         if self.is_running:
@@ -244,7 +278,10 @@ class AlertAgent:
 
     async def vision_check(self) -> None:
         """Validate that screenshot capture works for configured alert region."""
-        self.load_settings()
+        if not self.load_settings():
+            self.check = False
+            return
+
         screenshot, _ = self.wincap.get_screenshot_value(
             self.y1, self.x1, self.x2, self.y2
         )
